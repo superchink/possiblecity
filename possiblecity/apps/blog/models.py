@@ -76,4 +76,4 @@ class InlineImage(ImageBase):
     image = models.ImageField(upload_to='images/entries/')
 
 
-models.signals.post_save.connect(post_to_twitter, sender=Entry)
+#models.signals.post_save.connect(post_to_twitter, sender=Entry)
