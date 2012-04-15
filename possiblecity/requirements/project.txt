@@ -17,7 +17,6 @@ south
 django-haystack
 django-generic-flatblocks
 django-imagekit
-django-social-auth
 django-taggit
 django-markup
 django-oembed

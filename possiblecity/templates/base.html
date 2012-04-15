@@ -62,33 +62,6 @@
                         <!--<li id="contact"><a href="#">Contact</a></li>-->
                     </ul>
                 {% endblock site_nav %}
-                {% block user_nav %}
-                    {% load ifsetting_tag %}
-                    <ul class="user">
-                        {% if user.is_authenticated %}
-                            <li class="notices">
-                                <a href="{% url notification_notices %}">{% if notice_unseen_count %}<span class="active">{{ notice_unseen_count }}</span>{% else %}<span>0</span>{% endif %}</a></li>
-                            <li class="account">
-                                <a href="#">
-                                    {% if user.profile.image %}<img src="{{ user.profile.image }}" />{%  endif %}
-                                    {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}</a>
-                                <ul>
-                                    <li><a href="{% url profile_detail user.username %}">{% trans "Profile" %}</a></li>
-                                    <li><a href="{% url acct_email %}">Settings</a></li>
-                                    {% if user.is_staff %}
-                                        <li><a href="{% url admin:index %}">Admin</a></li>
-                                    {% endif %}
-                                    <li><a href="{% url acct_logout %}">Log Out</a></li>
-                                </ul>
-                            </li>
-                        {% else %}
-                            <li><a href="{% url acct_login %}">Log In</a></li>
-                            {% ifsetting ACCOUNT_OPEN_SIGNUP %}
-                                <li><a href="{% url acct_signup %}">Sign Up</a></li>
-                            {% endifsetting %}
-                        {% endif %}
-                    </ul>
-                {% endblock user_nav %}
                 {% block search_nav %}
                     <form method="get" action="/search/">
                         <input class="search-query" type="text" name="q" id="searchinput" placeholder="Search" results=5>
@@ -130,8 +103,6 @@
     {% endblock js_local %}
 
     {% block analytics %}
-        {% load metron_tags %}
-        {% analytics %}
         <script type="text/javascript">
 
             var _gaq = _gaq || [];

@@ -35,8 +35,8 @@ INTERNAL_IPS = [
 
 TIME_ZONE = 'America/New_York'
 LANGUAGE_CODE = 'en-us'
-USE_I18N = True    #internationalization machinery
-USE_L10N = True    #format dates, numbers and calendars according to locale
+USE_I18N = False    #internationalization machinery
+USE_L10N = False    #format dates, numbers and calendars according to locale
 
 
 #==============================================================================
@@ -91,18 +91,12 @@ TEMPLATE_CONTEXT_PROCESSORS = [
     "staticfiles.context_processors.static",
 
     "pinax.core.context_processors.pinax_settings",
-
-    "pinax.apps.account.context_processors.account",
-
-    "notification.context_processors.notification",
-    "announcements.context_processors.site_wide_announcements",
-    "social_auth.context_processors.social_auth_by_type_backends",
 ]
 
 
 TEMPLATE_LOADERS = [
-    "django.template.loaders.filesystem.load_template_source",
-    "django.template.loaders.app_directories.load_template_source",
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
 ]
 
 #==============================================================================
@@ -115,10 +109,7 @@ MIDDLEWARE_CLASSES = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django_openid.consumer.SessionConsumer",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "pinax.apps.account.middleware.LocaleMiddleware",
-    "pagination.middleware.PaginationMiddleware",
     "pinax.middleware.security.HideSensistiveFieldsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
@@ -142,54 +133,6 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 # Authentication
 #==============================================================================
 
-AUTHENTICATION_BACKENDS = (
-    "social_auth.backends.twitter.TwitterBackend",
-    "social_auth.backends.facebook.FacebookBackend",
-    "social_auth.backends.google.GoogleOAuthBackend",
-    "social_auth.backends.google.GoogleOAuth2Backend",
-    "social_auth.backends.google.GoogleBackend",
-    #'social_auth.backends.yahoo.YahooBackend',
-    #'social_auth.backends.contrib.linkedin.LinkedinBackend',
-    #'social_auth.backends.contrib.livejournal.LiveJournalBackend',
-    #'social_auth.backends.contrib.orkut.OrkutBackend',
-    #'social_auth.backends.contrib.foursquare.FoursquareBackend',
-    #'social_auth.backends.contrib.github.GithubBackend',
-    #'social_auth.backends.OpenIDBackend',
-    #'django.contrib.auth.backends.ModelBackend',
-    'pinax.apps.account.auth_backends.AuthenticationBackend',
-    )
-
-# django-social-auth
-SOCIAL_AUTH_ENABLED_BACKENDS = ('facebook', 'twitter', 'google-oauth2')
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
-SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/about/what_next'
-# SOCIAL_AUTH_NEW_ASSOCIATION_REDIRECT_URL = '/new-association-redirect-url/'
-# SOCIAL_AUTH_DISCONNECT_REDIRECT_URL = '/account-disconnected-redirect-url/'
-# SOCIAL_AUTH_ERROR_KEY = 'social_errors'
-SOCIAL_AUTH_DEFAULT_USERNAME = 'new_social_auth_user'
-SOCIAL_AUTH_EXPIRATION = 'expires'
-SOCIAL_AUTH_COMPLETE_URL_NAME  = 'socialauth_complete'
-SOCIAL_AUTH_ASSOCIATE_URL_NAME = 'socialauth_associate_complete'
-SOCIAL_AUTH_ASSOCIATE_BY_MAIL = True
-FACEBOOK_EXTENDED_PERMISSIONS = ['email']
-
-# Account
-ACCOUNT_OPEN_SIGNUP = False
-ACCOUNT_USE_OPENID = False
-ACCOUNT_REQUIRED_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = False
-ACCOUNT_EMAIL_AUTHENTICATION = False
-ACCOUNT_UNIQUE_EMAIL = EMAIL_CONFIRMATION_UNIQUE_EMAIL = False
-
-ABSOLUTE_URL_OVERRIDES = {
-    "auth.user": lambda o: "/profiles/profile/%s/" % o.username,
-    }
-
-AUTH_PROFILE_MODULE = "profiles.Profile"
-
-LOGIN_URL = "/account/login/" # @@@ any way this can be a url name?
-LOGIN_REDIRECT_URLNAME = "what_next"
-LOGOUT_REDIRECT_URLNAME = "home"
 
 
 #==============================================================================
@@ -205,28 +148,14 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.humanize',
-    #'django.contrib.gis',
 
     # Third party Pinax apps
     'pinax.templatetags',
-    'pinax.apps.account',
-    'pinax.apps.signup_codes',
-
-    # Pinax theme
-    'pinax_theme_bootstrap',
 
     # third party apps
-    'notification',
     'staticfiles',
     'compressor',
     'debug_toolbar',
-    'mailer',
-    'timezones',
-    'metron', # analytics and metrics
-    'announcements',
-    'pagination',
-    'idios',
-    'emailconfirmation',
 
     'haystack', # search
     'south', # database migrations
@@ -234,7 +163,6 @@ INSTALLED_APPS = (
     'imagekit',
     'django_markup', # required for blog
     'taggit', # required for blog, float, & lotxlot
-    'social_auth', # registration via social networks
     'django_generic_flatblocks',
 
 
@@ -247,9 +175,6 @@ INSTALLED_APPS = (
     # local apps
     'blog',
     'about',
-    'profiles',
-    #'float',
-    #'lotxlot',
 
 )
 
@@ -286,10 +211,6 @@ LOGGING = {
 # Email
 #==============================================================================
 
-# django-mailer
-EMAIL_BACKEND = "mailer.backend.DbBackend"
-EMAIL_CONFIRMATION_DAYS = 2
-EMAIL_DEBUG = DEBUG
 
 #==============================================================================
 # Search
@@ -303,17 +224,13 @@ HAYSTACK_SITECONF = 'possiblecity.search_sites'
 # Notifications
 #==============================================================================
 
-NOTIFICATION_LANGUAGE_MODULE = "account.Account"
+
 
 #==============================================================================
 # Analytics
 #==============================================================================
 
-METRON_SETTINGS = {
-    "google": {
-        "1": "UA-28417563-1", # production
-    }
-}
+
 
 #==============================================================================
 # local app settings
