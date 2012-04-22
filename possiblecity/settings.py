@@ -43,7 +43,6 @@ USE_L10N = False    #format dates, numbers and calendars according to locale
 # Project URLS and media settings
 #==============================================================================
 
-# tells Pinax to serve media through the staticfiles app.
 SERVE_MEDIA = DEBUG
 
 ROOT_URLCONF = 'possiblecity.urls'

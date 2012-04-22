@@ -18,7 +18,7 @@
     {% endblock metadata %}
 
     {% block mobile-viewport %}
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    
     {% endblock mobile-viewport %}
 
     {% block favicons %}
@@ -51,7 +51,7 @@
 {% endblock js_facebook %}
 {% block body %}
     {% block header_container %}
-        <header>
+        <header class="site-header">
             {% block header %}
             <nav class="site-nav">
                 <a href="{% url blog_entry_index %}"><img src="{{ STATIC_URL }}img/logo_xs.png" /></a>
@@ -71,13 +71,20 @@
         {% endblock header %}
         </header>
     {% endblock header_container %}
-    {% block content_container %}
-        {% include "_messages.html" %}
-        <section class="content">
-        {% block content %}
-        {% endblock content %}
+    {% block page %}
+        <section class="page">
+            {% block messages %}
+            {% endblock messages %}
+            {% block content_header %}
+            {% endblock content_header %}
+            {% block content_container %}
+                <section class="content">
+                    {% block content %}
+                    {% endblock content %}
+                </section>
+            {% endblock content_container %}
         </section>
-    {% endblock content_container %}
+    {% endblock page %}
     {% block footer_container %}
         <footer>
             {% block footer %}
