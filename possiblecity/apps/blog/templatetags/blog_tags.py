@@ -15,7 +15,7 @@ class LatestEntries(template.Node):
         self.var_name = var_name
 
     def render(self, context):
-        entries = Entry.objects.live()[:self.limit]
+        entries = Entry.objects.live().order_by('-published')[:self.limit]
         if entries and (self.limit == 1):
             context[self.var_name] = entries[0]
         else:
