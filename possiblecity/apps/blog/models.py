@@ -20,7 +20,7 @@ class Entry(EntryBase):
         Adds tags, markup, commenting, images
     """
     tags = TaggableManager(blank=True)
-    enable_comments = models.BooleanField(default=True)
+    enable_comments = models.BooleanField(default=False)
     markup = MarkupField(default=settings.BLOG_MARKUP_DEFAULT)
 
     # Fields to store generated HTML. For use with a markup syntax such as Markdown or Textile
