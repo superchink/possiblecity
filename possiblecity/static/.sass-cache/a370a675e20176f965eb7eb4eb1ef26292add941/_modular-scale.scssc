@@ -1,0 +1,1143 @@
+3.2.1 (Media Mark)
+17ab5639e249a3b557406879a16d35b8980fe75d
+o:Sass::Tree::RootNode
+:
+@linei:@template"@(// SASSY MODULAR-SCALE
+// https://github.com/scottkellum/modular-scale
+
+// Defaults
+$ratio: golden_ratio() !default;
+$base-size: 16px !default;
+$round-pixels: true !default;
+
+// Modular Scale function
+@function modular-scale($multiple, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+  
+  // return the $base-size if $multiple is zero
+  @if $multiple == 0 {
+    @if type-of($base-size) == "list" {
+      $base-size: sort_list($base-size);
+      @return nth($base-size, 1);
+    }
+    
+    // return just the simple $base-size value if it's not a list
+    @return $base-size;
+  }
+  
+  // if multiple base-sizes are passed in as a list
+  // and multiple ratios are passed in as a list
+  // calculate values in using each base-size / ratio combination
+  @if type-of($base-size) == "list" and type-of($ratio) == "list" {
+    @if unit(ms-multibase-multiratio($multiple, $base-size, $ratio)) == "px" and $round-pixels == true {
+      @return round(ms-multibase-multiratio($multiple, $base-size, $ratio));
+    }
+    @return ms-multibase-multiratio($multiple, $base-size, $ratio);
+  }
+  
+  // if multiple base-sizes are passed in as a list
+  // calculate values in using each base-size
+  @if type-of($base-size) == "list" and type-of($ratio) == "number" {
+    @if unit(ms-multibase($multiple, $base-size, $ratio)) == "px" and $round-pixels == true {
+      @return round(ms-multibase($multiple, $base-size, $ratio));
+    }
+    @return ms-multibase($multiple, $base-size, $ratio);
+  }
+  
+  // if multiple ratios are passed in as a list
+  // calculate values in using each ratio
+  @if type-of($base-size) == "number" and type-of($ratio) == "list" {
+    @if unit(ms-multiratio($multiple, $base-size, $ratio)) == "px" and $round-pixels == true {
+      @return round(ms-multiratio($multiple, $base-size, $ratio));
+    }
+    @return ms-multiratio($multiple, $base-size, $ratio);
+  }
+  
+  // If there are no lists just run the simple function
+  @if unit(power($ratio, $multiple) * $base-size) == "px" and $round-pixels == true {
+    @return round(power($ratio, $multiple) * $base-size);
+  }
+  @return power($ratio, $multiple) * $base-size;
+}
+
+// calculate values in using each base-size / ratio combination
+@function ms-multibase-multiratio($multiple, $base-size: $base-size, $ratio: $ratio) {
+  
+  // start with an empty list to place all values in
+  $scale-values: ();
+  
+  // make sure base sizes are in ascending order
+  $base-size: sort_list($base-size);
+  
+  // take each base-size in turn
+  $k: 1;
+  @while $k <= length($base-size) {
+    
+    // add each $base-size to the list except the first
+    @if $k > 1 {
+      $scale-values: append($scale-values, nth($base-size, $k));
+    }
+    
+    // take each ratio in turn
+    $j: 1;
+    @while $j <= length($ratio) {
+      
+      // reset $modular-scale for each set
+      $modular-scale: nth($base-size, $k);
+      
+      // do the scale for each base-size using this ratio
+      @if $multiple > 0 {
+        
+        // up $multiple times
+        // and add the result to $scale-values
+        @for $i from 1 through $multiple {
+          $modular-scale: power(nth($ratio, $j), $i) * nth($base-size, $k);
+          $scale-values: append($scale-values, $modular-scale);
+        }
+        
+        // and down until the value is lower than the lowest $base-size
+        // and add the result to $scale-values
+        $i: -1;
+        $modular-scale: nth($base-size, $k);
+        @while $modular-scale >= nth($base-size, 1) {
+          $modular-scale: power(nth($ratio, $j), $i) * nth($base-size, $k);
+          $scale-values: append($scale-values, $modular-scale);
+          $i: $i - 1;
+        }
+      }
+      @if $multiple < 0 {
+        
+        // do the scale down for each set to below 1px
+        $i: 0;
+        $modular-scale: nth($base-size, $k);
+        @while $i >= $multiple {
+          $modular-scale: power(nth($ratio, $j), $i) * nth($base-size, $k);
+          $scale-values: append($scale-values, $modular-scale);
+          $i: $i - 1;
+        }
+      }
+      $j: $j + 1;
+    }
+    $k: $k + 1;
+  }
+  
+  // return trimmed and sorted final list
+  @return trim-sort($multiple, $scale-values, $base-size);
+}
+
+// calculate values in using each base-size
+@function ms-multibase($multiple, $base-size: $base-size, $ratio: $ratio) {
+  
+  // start with an empty list to place all values in
+  $scale-values: ();
+  
+  // make sure base sizes are in ascending order
+  $base-size: sort_list($base-size);
+  
+  // take each base-size in turn
+  $k: 1;
+  @while $k <= length($base-size) {
+    
+    // add each $base-size to the list except the first
+    @if $k > 1 {
+      $scale-values: append($scale-values, nth($base-size, $k));
+    }
+    
+    // reset $modular-scale for each set
+    $modular-scale: nth($base-size, $k);
+    
+    // do the scale for each base-size using this ratio
+    @if $multiple > 0 {
+      
+      // up $multiple times
+      // and add the result to $scale-values
+      @for $i from 1 through $multiple {
+        $modular-scale: power($ratio, $i) * nth($base-size, $k);
+        $scale-values: append($scale-values, $modular-scale);
+      }
+      
+      // and down until the value is lower than the lowest $base-size
+      // and add the result to $scale-values
+      $i: -1;
+      $modular-scale: nth($base-size, $k);
+      @while $modular-scale >= nth($base-size, 1) {
+        $modular-scale: power($ratio, $i) * nth($base-size, $k);
+        $scale-values: append($scale-values, $modular-scale);
+        $i: $i - 1;
+      }
+    }
+    @if $multiple < 0 {
+      
+      // do the scale down for each set to below 1px
+      $i: 0;
+      $modular-scale: nth($base-size, $k);
+      @while $i >= $multiple {
+        $modular-scale: power($ratio, $i) * nth($base-size, $k);
+        $scale-values: append($scale-values, $modular-scale);
+        $i: $i - 1;
+      }
+    }
+    $k: $k + 1;
+  }
+  
+  // return trimmed and sorted final list
+  @return trim-sort($multiple, $scale-values, $base-size);
+}
+
+// calculate values in using each ratio
+@function ms-multiratio($multiple, $base-size: $base-size, $ratio: $ratio) {
+  
+  // start with an empty list to place all values in
+  $scale-values: ();
+  
+  // If $multiple is a positive integer (up the scale)
+  @if $multiple > 0 {
+    
+    // take each ratio in turn
+    $j: 1;
+    @while $j <= length($ratio) {
+      
+      // reset $modular-scale for each set
+      $modular-scale: $base-size;
+      
+      // do the scale using this ratio thru the multiple, and add the result to $scale-values
+      @for $i from 1 through $multiple {
+        $modular-scale: power(nth($ratio, $j), $i) * $base-size;
+        $scale-values: append($scale-values, $modular-scale);
+      }
+      $j: $j + 1;
+    }
+    
+    // sort acsending
+    $scale-values: sort_list($scale-values);
+    
+    // return the final value using the laced list
+    @return nth($scale-values, $multiple);
+  }
+  
+  // If $multiple is a negative integer (down the scale)
+  @if $multiple < 0 {
+    
+    // take each ratio in turn
+    $j: 1;
+    @while $j <= length($ratio) {
+      
+      // reset $modular-scale for each set
+      $modular-scale: $base-size;
+      
+      // do the scale using this ratio thru the multiple, and add the result to $scale-values
+      @for $i from 1 through $multiple * -1 {
+        $modular-scale: power(nth($ratio, $j), -$i) * $base-size;
+        $scale-values: append($scale-values, $modular-scale);
+      }
+      $j: $j + 1;
+    }
+    
+    // sort decending
+    $scale-values: reverse_list(sort_list($scale-values));
+    
+    // return the final value using the laced list
+    @return nth($scale-values, $multiple * -1);
+  }
+}
+
+// trim and sort the final list
+@function trim-sort($multiple, $scale-values: $scale-values, $base-size: $base-size) {
+  @if $multiple > 0 {
+    
+    // trim list so we can count from the lowest $base-size
+    $scale-values: trim_list($scale-values, nth($base-size, 1), true);
+    
+    // sort acsending
+    $scale-values: sort_list($scale-values);
+    
+    // return the final value using the laced list
+    @return nth($scale-values, $multiple);
+  }
+  @else {
+    
+    // trim list so we can count from the lowest $base-size
+    $scale-values: trim_list($scale-values, nth($base-size, 1), false);
+    
+    // sort acsending
+    $scale-values: reverse_list(sort_list($scale-values));
+    
+    // return the final value using the laced list
+    @return nth($scale-values, -$multiple);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////
+
+// alias for golden_ratio()
+@function golden() {
+  @return golden_ratio();
+}
+
+// Shortcut
+@function ms($multiple, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+  // Return the value from the Modular Scale function
+  @return modular-scale($multiple, $base-size, $ratio, $round-pixels);
+}
+
+// Write Modular Scale List
+@function modular-scale-list($start: 0, $finish: 20, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+  $ms-list: unquote("MS-LIST:");
+  @for $i from $start through $finish {
+    $ms-list: append($ms-list, ms($i, $base-size, $ratio, $round-pixels));
+  }
+  @return $ms-list;
+}
+
+@function ms-list($start: 0, $finish: 20, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+  @return modular-scale-list($start, $finish, $base-size, $ratio, $round-pixels);
+}
+
+@mixin modular-scale-list($start: 0, $finish: 20, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+  @debug modular-scale-list($start, $finish, $base-size, $ratio, $round-pixels);
+}
+
+@mixin ms-list($start: 0, $finish: 20, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+  @debug modular-scale-list($start, $finish, $base-size, $ratio, $round-pixels);
+}
+
+@mixin modular-scale-list-output($start: 0, $finish: 20, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+    MODULAR-SCALE-LIST {
+      ms-list: modular-scale-list($start, $finish, $base-size, $ratio, $round-pixels);
+    }
+  }
+
+@mixin ms-list-output($start: 0, $finish: 20, $base-size: $base-size, $ratio: $ratio, $round-pixels: $round-pixels) {
+  @include modular-scale-list-output($start, $finish, $base-size, $ratio, $round-pixels);
+}
+
+// Other libraries can easily query if this function is avalible
+$modular-scale-loaded: true;:@has_childrenT:@options{ :@children["o:Sass::Tree::CommentNode
+;i:
+@type:silent;	@:@value["N/* SASSY MODULAR-SCALE
+ * https://github.com/scottkellum/modular-scale */;
+[ o;
+;i	;;;	@;["/* Defaults */;
+[ o:Sass::Tree::VariableNode;i
+:@guarded"!default:
+@expro:Sass::Script::Funcall;i
+:@keywords{ :
+@name"golden_ratio;	@:@splat0:
+@args[ ;"
+ratio;	@;
+[ o;;i;"!default;o:Sass::Script::Number;i:@numerator_units["px:@original"	16px;	@;i:@denominator_units[ ;"base-size;	@;
+[ o;;i;"!default;o:Sass::Script::Bool;i;	@;T;"round-pixels;	@;
+[ o;
+;i;;;	@;["!/* Modular Scale function */;
+[ o:Sass::Tree::FunctionNode;i;"modular-scale;T;	@;
+[o;
+;i;;;	@;["5/* return the $base-size if $multiple is zero */;
+[ u:Sass::Tree::IfNodeñ[o:Sass::Script::Operation
+:@operator:eq:
+@linei:@operand2o:Sass::Script::Number;i:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;i:@underscored_name"multiple:
+@name"multiple;@
+;@
+0[u:Sass::Tree::IfNodeò[o:Sass::Script::Operation
+:@operator:eq:
+@linei:@operand2o:Sass::Script::String	;i:
+@type:string:@options{ :@value"	list:@operand1o:Sass::Script::Funcall;i:@keywords{ :
+@name"type-of;@:@splat0:
+@args[o:Sass::Script::Variable	;i:@underscored_name"base_size;"base-size;@;@0[o:Sass::Tree::VariableNode;i:@guarded0:
+@expro;;i;{ ;"sort_list;@;0;[o;	;i;"base_size;"base-size;@;"base-size;@:@children[ o:Sass::Tree::ReturnNode	;i;o;;i;{ ;"nth;@;0;[o;	;i;"base_size;"base-size;@o:Sass::Script::Number;i:@numerator_units[ :@original"1;@;i:@denominator_units[ ;@;[ o:Sass::Tree::CommentNode
+;i:
+@type:silent;@
+;["E/* return just the simple $base-size value if it's not a list */:@children[ o:Sass::Tree::ReturnNode	;i:
+@expro;	;i;"base_size;"base-size;@
+;@
+;[ o;
+;i;;;	@;["£/* if multiple base-sizes are passed in as a list
+ * and multiple ratios are passed in as a list
+ * calculate values in using each base-size / ratio combination */;
+[ u;Æ[o:Sass::Script::Operation
+:@operator:and:
+@linei:@operand2o; 
+;:eq;i;	o:Sass::Script::String	;i:
+@type:string:@options{ :@value"	list:@operand1o:Sass::Script::Funcall;i:@keywords{ :
+@name"type-of;@	:@splat0:
+@args[o:Sass::Script::Variable	;i:@underscored_name"
+ratio;"
+ratio;@	;@	;o; 
+;;
+;i;	o;	;i;;;@	;"	list;o;;i;{ ;"type-of;@	;0;[o;	;i;"base_size;"base-size;@	;@	;@	0[u:Sass::Tree::IfNode[o:Sass::Script::Operation
+:@operator:and:
+@linei :@operand2o; 
+;:eq;i ;	o:Sass::Script::Bool;i :@options{ :@valueT:@operand1o:Sass::Script::Variable	;i :@underscored_name"round_pixels:
+@name"round-pixels;@	;@	;o; 
+;;
+;i ;	o:Sass::Script::String	;i :
+@type:string;@	;"px;o:Sass::Script::Funcall;i :@keywords{ ;"	unit;@	:@splat0:
+@args[o;;i ;{ ;"ms-multibase-multiratio;@	;0;[o;	;i ;"multiple;"multiple;@	o;	;i ;"base_size;"base-size;@	o;	;i ;"
+ratio;"
+ratio;@	;@	;@	0[o:Sass::Tree::ReturnNode	;i!:
+@expro;;i!;{ ;"
+round;@	;0;[o;;i!;{ ;"ms-multibase-multiratio;@	;0;[o;	;i!;"multiple;"multiple;@	o;	;i!;"base_size;"base-size;@	o;	;i!;"
+ratio;"
+ratio;@	;@	:@children[ o:Sass::Tree::ReturnNode	;i#:
+@expro;;i#;{ ;"ms-multibase-multiratio;@	;0;[o;	;i#;"multiple;"multiple;@	o;	;i#;"base_size;"base-size;@	o;	;i#;"
+ratio;"
+ratio;@	;@	:@children[ o;
+;i&;;;	@;["e/* if multiple base-sizes are passed in as a list
+ * calculate values in using each base-size */;
+[ u;è[o:Sass::Script::Operation
+:@operator:and:
+@linei(:@operand2o; 
+;:eq;i(;	o:Sass::Script::String	;i(:
+@type:string:@options{ :@value"number:@operand1o:Sass::Script::Funcall;i(:@keywords{ :
+@name"type-of;@	:@splat0:
+@args[o:Sass::Script::Variable	;i(:@underscored_name"
+ratio;"
+ratio;@	;@	;o; 
+;;
+;i(;	o;	;i(;;;@	;"	list;o;;i(;{ ;"type-of;@	;0;[o;	;i(;"base_size;"base-size;@	;@	;@	0[u:Sass::Tree::IfNode˜[o:Sass::Script::Operation
+:@operator:and:
+@linei):@operand2o; 
+;:eq;i);	o:Sass::Script::Bool;i):@options{ :@valueT:@operand1o:Sass::Script::Variable	;i):@underscored_name"round_pixels:
+@name"round-pixels;@	;@	;o; 
+;;
+;i);	o:Sass::Script::String	;i):
+@type:string;@	;"px;o:Sass::Script::Funcall;i):@keywords{ ;"	unit;@	:@splat0:
+@args[o;;i);{ ;"ms-multibase;@	;0;[o;	;i);"multiple;"multiple;@	o;	;i);"base_size;"base-size;@	o;	;i);"
+ratio;"
+ratio;@	;@	;@	0[o:Sass::Tree::ReturnNode	;i*:
+@expro;;i*;{ ;"
+round;@	;0;[o;;i*;{ ;"ms-multibase;@	;0;[o;	;i*;"multiple;"multiple;@	o;	;i*;"base_size;"base-size;@	o;	;i*;"
+ratio;"
+ratio;@	;@	:@children[ o:Sass::Tree::ReturnNode	;i,:
+@expro;;i,;{ ;"ms-multibase;@	;0;[o;	;i,;"multiple;"multiple;@	o;	;i,;"base_size;"base-size;@	o;	;i,;"
+ratio;"
+ratio;@	;@	:@children[ o;
+;i/;;;	@;["]/* if multiple ratios are passed in as a list
+ * calculate values in using each ratio */;
+[ u;í[o:Sass::Script::Operation
+:@operator:and:
+@linei1:@operand2o; 
+;:eq;i1;	o:Sass::Script::String	;i1:
+@type:string:@options{ :@value"	list:@operand1o:Sass::Script::Funcall;i1:@keywords{ :
+@name"type-of;@	:@splat0:
+@args[o:Sass::Script::Variable	;i1:@underscored_name"
+ratio;"
+ratio;@	;@	;o; 
+;;
+;i1;	o;	;i1;;;@	;"number;o;;i1;{ ;"type-of;@	;0;[o;	;i1;"base_size;"base-size;@	;@	;@	0[u:Sass::Tree::IfNode˘[o:Sass::Script::Operation
+:@operator:and:
+@linei2:@operand2o; 
+;:eq;i2;	o:Sass::Script::Bool;i2:@options{ :@valueT:@operand1o:Sass::Script::Variable	;i2:@underscored_name"round_pixels:
+@name"round-pixels;@	;@	;o; 
+;;
+;i2;	o:Sass::Script::String	;i2:
+@type:string;@	;"px;o:Sass::Script::Funcall;i2:@keywords{ ;"	unit;@	:@splat0:
+@args[o;;i2;{ ;"ms-multiratio;@	;0;[o;	;i2;"multiple;"multiple;@	o;	;i2;"base_size;"base-size;@	o;	;i2;"
+ratio;"
+ratio;@	;@	;@	0[o:Sass::Tree::ReturnNode	;i3:
+@expro;;i3;{ ;"
+round;@	;0;[o;;i3;{ ;"ms-multiratio;@	;0;[o;	;i3;"multiple;"multiple;@	o;	;i3;"base_size;"base-size;@	o;	;i3;"
+ratio;"
+ratio;@	;@	:@children[ o:Sass::Tree::ReturnNode	;i5:
+@expro;;i5;{ ;"ms-multiratio;@	;0;[o;	;i5;"multiple;"multiple;@	o;	;i5;"base_size;"base-size;@	o;	;i5;"
+ratio;"
+ratio;@	;@	:@children[ o;
+;i8;;;	@;["=/* If there are no lists just run the simple function */;
+[ u;[o:Sass::Script::Operation
+:@operator:and:
+@linei9:@operand2o; 
+;:eq;i9;	o:Sass::Script::Bool;i9:@options{ :@valueT:@operand1o:Sass::Script::Variable	;i9:@underscored_name"round_pixels:
+@name"round-pixels;@	;@	;o; 
+;;
+;i9;	o:Sass::Script::String	;i9:
+@type:string;@	;"px;o:Sass::Script::Funcall;i9:@keywords{ ;"	unit;@	:@splat0:
+@args[o; 
+;:
+times;i9;	o;	;i9;"base_size;"base-size;@	;o;;i9;{ ;"
+power;@	;0;[o;	;i9;"
+ratio;"
+ratio;@	o;	;i9;"multiple;"multiple;@	;@	;@	;@	0[o:Sass::Tree::ReturnNode	;i::
+@expro;;i:;{ ;"
+round;@	;0;[o; 
+;;;i:;	o;	;i:;"base_size;"base-size;@	;o;;i:;{ ;"
+power;@	;0;[o;	;i:;"
+ratio;"
+ratio;@	o;	;i:;"multiple;"multiple;@	;@	;@	:@children[ o:Sass::Tree::ReturnNode	;i<;o:Sass::Script::Operation
+:@operator:
+times;i<:@operand2o:Sass::Script::Variable	;i<:@underscored_name"base_size;"base-size;	@:@operand1o;;i<;{ ;"
+power;	@;0;[o;#	;i<;$"
+ratio;"
+ratio;	@o;#	;i<;$"multiple;"multiple;	@;	@;	@;
+[ ;0;[	[o;#;$"multiple;"multiple;	@0[o;#;$"base_size;"base-size;	@o;#	;i;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i;$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i;$"round_pixels;"round-pixels;	@o;
+;i?;;;	@;["G/* calculate values in using each base-size / ratio combination */;
+[ o;;i@;"ms-multibase-multiratio;T;	@;
+[o;
+;iB;;;	@;[":/* start with an empty list to place all values in */;
+[ o;;iC;0;o:Sass::Script::List	;iC:@separator:
+space;	@;[ ;"scale-values;	@;
+[ o;
+;iE;;;	@;["6/* make sure base sizes are in ascending order */;
+[ o;;iF;0;o;;iF;{ ;"sort_list;	@;0;[o;#	;iF;$"base_size;"base-size;	@;"base-size;	@;
+[ o;
+;iH;;;	@;["&/* take each base-size in turn */;
+[ o;;iI;0;o;;iI;[ ;"1;	@;i;[ ;"k;	@;
+[ o:Sass::Tree::WhileNode
+;iJ;o;
+; :lte;iJ;"o;;iJ;{ ;"length;	@;0;[o;#	;iJ;$"base_size;"base-size;	@;%o;#	;iJ;$"k;"k;	@;	@;T;	@;
+[o;
+;iL;;;	@;[";/* add each $base-size to the list except the first */;
+[ u;#[o:Sass::Script::Operation
+:@operator:gt:
+@lineiM:@operand2o:Sass::Script::Number;iM:@numerator_units[ :@original"1:@options{ :@valuei:@denominator_units[ :@operand1o:Sass::Script::Variable	;iM:@underscored_name"k:
+@name"k;@
+;@
+0[o:Sass::Tree::VariableNode;iN:@guarded0:
+@expro:Sass::Script::Funcall;iN:@keywords{ ;"append;@
+:@splat0:
+@args[o;	;iN;"scale_values;"scale-values;@
+o;;iN;{ ;"nth;@
+;0;[o;	;iN;"base_size;"base-size;@
+o;	;iN;"k;"k;@
+;"scale-values;@
+:@children[ o;
+;iQ;;;	@;[""/* take each ratio in turn */;
+[ o;;iR;0;o;;iR;[ ;"1;	@;i;@í;"j;	@;
+[ o;)
+;iS;o;
+; ;*;iS;"o;;iS;{ ;"length;	@;0;[o;#	;iS;$"
+ratio;"
+ratio;	@;%o;#	;iS;$"j;"j;	@;	@;T;	@;
+[o;
+;iU;;;	@;[",/* reset $modular-scale for each set */;
+[ o;;iV;0;o;;iV;{ ;"nth;	@;0;[o;#	;iV;$"base_size;"base-size;	@o;#	;iV;$"k;"k;	@;"modular-scale;	@;
+[ o;
+;iX;;;	@;[";/* do the scale for each base-size using this ratio */;
+[ u;d[o:Sass::Script::Operation
+:@operator:gt:
+@lineiY:@operand2o:Sass::Script::Number;iY:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;iY:@underscored_name"multiple:
+@name"multiple;@
+;@
+0[o:Sass::Tree::CommentNode
+;i[:
+@type:silent;@
+;["D/* up $multiple times
+ * and add the result to $scale-values */:@children[ o:Sass::Tree::ForNode;i]:@exclusiveF:
+@fromo;
+;i];[ ;"1;@
+;i;@:@has_childrenT;@
+:	@var"i;[o:Sass::Tree::VariableNode;i^:@guarded0:
+@expro; 
+;:
+times;i^;	o:Sass::Script::Funcall;i^:@keywords{ ;"nth;@
+:@splat0:
+@args[o;	;i^;"base_size;"base-size;@
+o;	;i^;"k;"k;@
+;o;!;i^;"{ ;"
+power;@
+;#0;$[o;!;i^;"{ ;"nth;@
+;#0;$[o;	;i^;"
+ratio;"
+ratio;@
+o;	;i^;"j;"j;@
+o;	;i^;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;i_;0;o;!;i_;"{ ;"append;@
+;#0;$[o;	;i_;"scale_values;"scale-values;@
+o;	;i_;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ :@too;	;i];"multiple;"multiple;@
+o;
+;ib;;;@
+;["n/* and down until the value is lower than the lowest $base-size
+ * and add the result to $scale-values */;[ o;;id;0;o;
+;id;[ ;"-1;@
+;i˙;@;"i;@
+;[ o;;ie;0;o;!;ie;"{ ;"nth;@
+;#0;$[o;	;ie;"base_size;"base-size;@
+o;	;ie;"k;"k;@
+;"modular-scale;@
+;[ o:Sass::Tree::WhileNode
+;if;o; 
+;:gte;if;	o;!;if;"{ ;"nth;@
+;#0;$[o;	;if;"base_size;"base-size;@
+o;
+;if;[ ;"1;@
+;i;@;o;	;if;"modular_scale;"modular-scale;@
+;@
+;T;@
+;[o;;ig;0;o; 
+;; ;ig;	o;!;ig;"{ ;"nth;@
+;#0;$[o;	;ig;"base_size;"base-size;@
+o;	;ig;"k;"k;@
+;o;!;ig;"{ ;"
+power;@
+;#0;$[o;!;ig;"{ ;"nth;@
+;#0;$[o;	;ig;"
+ratio;"
+ratio;@
+o;	;ig;"j;"j;@
+o;	;ig;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;ih;0;o;!;ih;"{ ;"append;@
+;#0;$[o;	;ih;"scale_values;"scale-values;@
+o;	;ih;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ o;;ii;0;o; 
+;:
+minus;ii;	o;
+;ii;[ ;"1;@
+;i;@;o;	;ii;"i;"i;@
+;@
+;"i;@
+;[ u;8[o:Sass::Script::Operation
+:@operator:lt:
+@lineil:@operand2o:Sass::Script::Number;il:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;il:@underscored_name"multiple:
+@name"multiple;@
+;@
+0[	o:Sass::Tree::CommentNode
+;in:
+@type:silent;@
+;["6/* do the scale down for each set to below 1px */:@children[ o:Sass::Tree::VariableNode;io:@guarded0:
+@expro;
+;io;[ ;"0;@
+;i ;@;"i;@
+;[ o;;ip;0;o:Sass::Script::Funcall;ip:@keywords{ ;"nth;@
+:@splat0:
+@args[o;	;ip;"base_size;"base-size;@
+o;	;ip;"k;"k;@
+;"modular-scale;@
+;[ o:Sass::Tree::WhileNode
+;iq;o; 
+;:gte;iq;	o;	;iq;"multiple;"multiple;@
+;o;	;iq;"i;"i;@
+;@
+:@has_childrenT;@
+;[o;;ir;0;o; 
+;:
+times;ir;	o;;ir;{ ;"nth;@
+;0;[o;	;ir;"base_size;"base-size;@
+o;	;ir;"k;"k;@
+;o;;ir;{ ;"
+power;@
+;0;[o;;ir;{ ;"nth;@
+;0;[o;	;ir;"
+ratio;"
+ratio;@
+o;	;ir;"j;"j;@
+o;	;ir;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;is;0;o;;is;{ ;"append;@
+;0;[o;	;is;"scale_values;"scale-values;@
+o;	;is;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ o;;it;0;o; 
+;:
+minus;it;	o;
+;it;[ ;"1;@
+;i;@;o;	;it;"i;"i;@
+;@
+;"i;@
+;[ o;;iw;0;o;
+; :	plus;iw;"o;;iw;[ ;"1;	@;i;@í;%o;#	;iw;$"j;"j;	@;	@;"j;	@;
+[ o;;iy;0;o;
+; ;+;iy;"o;;iy;[ ;"1;	@;i;@í;%o;#	;iy;$"k;"k;	@;	@;"k;	@;
+[ o;
+;i|;;;	@;["//* return trimmed and sorted final list */;
+[ o;	;i};o;;i};{ ;"trim-sort;	@;0;[o;#	;i};$"multiple;"multiple;	@o;#	;i};$"scale_values;"scale-values;	@o;#	;i};$"base_size;"base-size;	@;	@;
+[ ;0;[[o;#;$"multiple;"multiple;	@0[o;#;$"base_size;"base-size;	@o;#	;i@;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i@;$"
+ratio;"
+ratio;	@o;
+;i{;;;	@;["3/* calculate values in using each base-size */;
+[ o;;i|;"ms-multibase;T;	@;
+[o;
+;i~;;;	@;[":/* start with an empty list to place all values in */;
+[ o;;i;0;o;&	;i;';(;	@;[ ;"scale-values;	@;
+[ o;
+;iÅ;;;	@;["6/* make sure base sizes are in ascending order */;
+[ o;;iÇ;0;o;;iÇ;{ ;"sort_list;	@;0;[o;#	;iÇ;$"base_size;"base-size;	@;"base-size;	@;
+[ o;
+;iÑ;;;	@;["&/* take each base-size in turn */;
+[ o;;iÖ;0;o;;iÖ;[ ;"1;	@;i;@í;"k;	@;
+[ o;)
+;iÜ;o;
+; ;*;iÜ;"o;;iÜ;{ ;"length;	@;0;[o;#	;iÜ;$"base_size;"base-size;	@;%o;#	;iÜ;$"k;"k;	@;	@;T;	@;
+[o;
+;ià;;;	@;[";/* add each $base-size to the list except the first */;
+[ u;,[o:Sass::Script::Operation
+:@operator:gt:
+@lineiâ:@operand2o:Sass::Script::Number;iâ:@numerator_units[ :@original"1:@options{ :@valuei:@denominator_units[ :@operand1o:Sass::Script::Variable	;iâ:@underscored_name"k:
+@name"k;@
+;@
+0[o:Sass::Tree::VariableNode;iä:@guarded0:
+@expro:Sass::Script::Funcall;iä:@keywords{ ;"append;@
+:@splat0:
+@args[o;	;iä;"scale_values;"scale-values;@
+o;;iä;{ ;"nth;@
+;0;[o;	;iä;"base_size;"base-size;@
+o;	;iä;"k;"k;@
+;"scale-values;@
+:@children[ o;
+;iç;;;	@;[",/* reset $modular-scale for each set */;
+[ o;;ié;0;o;;ié;{ ;"nth;	@;0;[o;#	;ié;$"base_size;"base-size;	@o;#	;ié;$"k;"k;	@;"modular-scale;	@;
+[ o;
+;iê;;;	@;[";/* do the scale for each base-size using this ratio */;
+[ u;,[o:Sass::Script::Operation
+:@operator:gt:
+@lineië:@operand2o:Sass::Script::Number;ië:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;ië:@underscored_name"multiple:
+@name"multiple;@
+;@
+0[o:Sass::Tree::CommentNode
+;iì:
+@type:silent;@
+;["D/* up $multiple times
+ * and add the result to $scale-values */:@children[ o:Sass::Tree::ForNode;iï:@exclusiveF:
+@fromo;
+;iï;[ ;"1;@
+;i;@:@has_childrenT;@
+:	@var"i;[o:Sass::Tree::VariableNode;iñ:@guarded0:
+@expro; 
+;:
+times;iñ;	o:Sass::Script::Funcall;iñ:@keywords{ ;"nth;@
+:@splat0:
+@args[o;	;iñ;"base_size;"base-size;@
+o;	;iñ;"k;"k;@
+;o;!;iñ;"{ ;"
+power;@
+;#0;$[o;	;iñ;"
+ratio;"
+ratio;@
+o;	;iñ;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;ió;0;o;!;ió;"{ ;"append;@
+;#0;$[o;	;ió;"scale_values;"scale-values;@
+o;	;ió;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ :@too;	;iï;"multiple;"multiple;@
+o;
+;iö;;;@
+;["n/* and down until the value is lower than the lowest $base-size
+ * and add the result to $scale-values */;[ o;;iú;0;o;
+;iú;[ ;"-1;@
+;i˙;@;"i;@
+;[ o;;iù;0;o;!;iù;"{ ;"nth;@
+;#0;$[o;	;iù;"base_size;"base-size;@
+o;	;iù;"k;"k;@
+;"modular-scale;@
+;[ o:Sass::Tree::WhileNode
+;iû;o; 
+;:gte;iû;	o;!;iû;"{ ;"nth;@
+;#0;$[o;	;iû;"base_size;"base-size;@
+o;
+;iû;[ ;"1;@
+;i;@;o;	;iû;"modular_scale;"modular-scale;@
+;@
+;T;@
+;[o;;iü;0;o; 
+;; ;iü;	o;!;iü;"{ ;"nth;@
+;#0;$[o;	;iü;"base_size;"base-size;@
+o;	;iü;"k;"k;@
+;o;!;iü;"{ ;"
+power;@
+;#0;$[o;	;iü;"
+ratio;"
+ratio;@
+o;	;iü;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;i†;0;o;!;i†;"{ ;"append;@
+;#0;$[o;	;i†;"scale_values;"scale-values;@
+o;	;i†;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ o;;i°;0;o; 
+;:
+minus;i°;	o;
+;i°;[ ;"1;@
+;i;@;o;	;i°;"i;"i;@
+;@
+;"i;@
+;[ u;"[o:Sass::Script::Operation
+:@operator:lt:
+@linei§:@operand2o:Sass::Script::Number;i§:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;i§:@underscored_name"multiple:
+@name"multiple;@
+;@
+0[	o:Sass::Tree::CommentNode
+;i¶:
+@type:silent;@
+;["6/* do the scale down for each set to below 1px */:@children[ o:Sass::Tree::VariableNode;iß:@guarded0:
+@expro;
+;iß;[ ;"0;@
+;i ;@;"i;@
+;[ o;;i®;0;o:Sass::Script::Funcall;i®:@keywords{ ;"nth;@
+:@splat0:
+@args[o;	;i®;"base_size;"base-size;@
+o;	;i®;"k;"k;@
+;"modular-scale;@
+;[ o:Sass::Tree::WhileNode
+;i©;o; 
+;:gte;i©;	o;	;i©;"multiple;"multiple;@
+;o;	;i©;"i;"i;@
+;@
+:@has_childrenT;@
+;[o;;i™;0;o; 
+;:
+times;i™;	o;;i™;{ ;"nth;@
+;0;[o;	;i™;"base_size;"base-size;@
+o;	;i™;"k;"k;@
+;o;;i™;{ ;"
+power;@
+;0;[o;	;i™;"
+ratio;"
+ratio;@
+o;	;i™;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;i´;0;o;;i´;{ ;"append;@
+;0;[o;	;i´;"scale_values;"scale-values;@
+o;	;i´;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ o;;i¨;0;o; 
+;:
+minus;i¨;	o;
+;i¨;[ ;"1;@
+;i;@;o;	;i¨;"i;"i;@
+;@
+;"i;@
+;[ o;;iØ;0;o;
+; ;+;iØ;"o;;iØ;[ ;"1;	@;i;@í;%o;#	;iØ;$"k;"k;	@;	@;"k;	@;
+[ o;
+;i≤;;;	@;["//* return trimmed and sorted final list */;
+[ o;	;i≥;o;;i≥;{ ;"trim-sort;	@;0;[o;#	;i≥;$"multiple;"multiple;	@o;#	;i≥;$"scale_values;"scale-values;	@o;#	;i≥;$"base_size;"base-size;	@;	@;
+[ ;0;[[o;#;$"multiple;"multiple;	@0[o;#;$"base_size;"base-size;	@o;#	;i|;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i|;$"
+ratio;"
+ratio;	@o;
+;i∂;;;	@;["//* calculate values in using each ratio */;
+[ o;;i∑;"ms-multiratio;T;	@;
+[o;
+;iπ;;;	@;[":/* start with an empty list to place all values in */;
+[ o;;i∫;0;o;&	;i∫;';(;	@;[ ;"scale-values;	@;
+[ o;
+;iº;;;	@;["</* If $multiple is a positive integer (up the scale) */;
+[ u;√[o:Sass::Script::Operation
+:@operator:gt:
+@lineiΩ:@operand2o:Sass::Script::Number;iΩ:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;iΩ:@underscored_name"multiple:
+@name"multiple;@
+;@
+0[o:Sass::Tree::CommentNode
+;iø:
+@type:silent;@
+;[""/* take each ratio in turn */:@children[ o:Sass::Tree::VariableNode;i¿:@guarded0:
+@expro;
+;i¿;[ ;"1;@
+;i;@;"j;@
+;[ o:Sass::Tree::WhileNode
+;i¡;o; 
+;:lte;i¡;	o:Sass::Script::Funcall;i¡:@keywords{ ;"length;@
+:@splat0:
+@args[o;	;i¡;"
+ratio;"
+ratio;@
+;o;	;i¡;"j;"j;@
+;@
+:@has_childrenT;@
+;[
+o;
+;i√;;;@
+;[",/* reset $modular-scale for each set */;[ o;;iƒ;0;o;	;iƒ;"base_size;"base-size;@
+;"modular-scale;@
+;[ o;
+;i∆;;;@
+;["_/* do the scale using this ratio thru the multiple, and add the result to $scale-values */;[ o:Sass::Tree::ForNode;i«:@exclusiveF:
+@fromo;
+;i«;[ ;"1;@
+;i;@;!T;@
+:	@var"i;[o;;i»;0;o; 
+;:
+times;i»;	o;	;i»;"base_size;"base-size;@
+;o;;i»;{ ;"
+power;@
+;0; [o;;i»;{ ;"nth;@
+;0; [o;	;i»;"
+ratio;"
+ratio;@
+o;	;i»;"j;"j;@
+o;	;i»;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;i…;0;o;;i…;{ ;"append;@
+;0; [o;	;i…;"scale_values;"scale-values;@
+o;	;i…;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ :@too;	;i«;"multiple;"multiple;@
+o;;iÀ;0;o; 
+;:	plus;iÀ;	o;
+;iÀ;[ ;"1;@
+;i;@;o;	;iÀ;"j;"j;@
+;@
+;"j;@
+;[ o;
+;iŒ;;;@
+;["/* sort acsending */;[ o;;iœ;0;o;;iœ;{ ;"sort_list;@
+;0; [o;	;iœ;"scale_values;"scale-values;@
+;"scale-values;@
+;[ o;
+;i—;;;@
+;["6/* return the final value using the laced list */;[ o:Sass::Tree::ReturnNode	;i“;o;;i“;{ ;"nth;@
+;0; [o;	;i“;"scale_values;"scale-values;@
+o;	;i“;"multiple;"multiple;@
+;@
+;[ o;
+;i’;;;	@;[">/* If $multiple is a negative integer (down the scale) */;
+[ u;è[o:Sass::Script::Operation
+:@operator:lt:
+@linei÷:@operand2o:Sass::Script::Number;i÷:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;i÷:@underscored_name"multiple:
+@name"multiple;@
+;@
+0[o:Sass::Tree::CommentNode
+;iÿ:
+@type:silent;@
+;[""/* take each ratio in turn */:@children[ o:Sass::Tree::VariableNode;iŸ:@guarded0:
+@expro;
+;iŸ;[ ;"1;@
+;i;@;"j;@
+;[ o:Sass::Tree::WhileNode
+;i⁄;o; 
+;:lte;i⁄;	o:Sass::Script::Funcall;i⁄:@keywords{ ;"length;@
+:@splat0:
+@args[o;	;i⁄;"
+ratio;"
+ratio;@
+;o;	;i⁄;"j;"j;@
+;@
+:@has_childrenT;@
+;[
+o;
+;i‹;;;@
+;[",/* reset $modular-scale for each set */;[ o;;i›;0;o;	;i›;"base_size;"base-size;@
+;"modular-scale;@
+;[ o;
+;iﬂ;;;@
+;["_/* do the scale using this ratio thru the multiple, and add the result to $scale-values */;[ o:Sass::Tree::ForNode;i‡:@exclusiveF:
+@fromo;
+;i‡;[ ;"1;@
+;i;@;!T;@
+:	@var"i;[o;;i·;0;o; 
+;:
+times;i·;	o;	;i·;"base_size;"base-size;@
+;o;;i·;{ ;"
+power;@
+;0; [o;;i·;{ ;"nth;@
+;0; [o;	;i·;"
+ratio;"
+ratio;@
+o;	;i·;"j;"j;@
+o:!Sass::Script::UnaryOperation	;:
+minus;i·;@
+:@operando;	;i·;"i;"i;@
+;@
+;"modular-scale;@
+;[ o;;i‚;0;o;;i‚;{ ;"append;@
+;0; [o;	;i‚;"scale_values;"scale-values;@
+o;	;i‚;"modular_scale;"modular-scale;@
+;"scale-values;@
+;[ :@too; 
+;;&;i‡;	o;
+;i‡;[ ;"-1;@
+;i˙;@;o;	;i‡;"multiple;"multiple;@
+;@
+o;;i‰;0;o; 
+;:	plus;i‰;	o;
+;i‰;[ ;"1;@
+;i;@;o;	;i‰;"j;"j;@
+;@
+;"j;@
+;[ o;
+;iÁ;;;@
+;["/* sort decending */;[ o;;iË;0;o;;iË;{ ;"reverse_list;@
+;0; [o;;iË;{ ;"sort_list;@
+;0; [o;	;iË;"scale_values;"scale-values;@
+;"scale-values;@
+;[ o;
+;iÍ;;;@
+;["6/* return the final value using the laced list */;[ o:Sass::Tree::ReturnNode	;iÎ;o;;iÎ;{ ;"nth;@
+;0; [o;	;iÎ;"scale_values;"scale-values;@
+o; 
+;;&;iÎ;	o;
+;iÎ;[ ;"-1;@
+;i˙;@;o;	;iÎ;"multiple;"multiple;@
+;@
+;@
+;[ ;0;[[o;#;$"multiple;"multiple;	@0[o;#;$"base_size;"base-size;	@o;#	;i∑;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i∑;$"
+ratio;"
+ratio;	@o;
+;iÔ;;;	@;["'/* trim and sort the final list */;
+[ o;;i;"trim-sort;T;	@;
+[u;ÿ[o:Sass::Script::Operation
+:@operator:gt:
+@lineiÒ:@operand2o:Sass::Script::Number;iÒ:@numerator_units[ :@original"0:@options{ :@valuei :@denominator_units[ :@operand1o:Sass::Script::Variable	;iÒ:@underscored_name"multiple:
+@name"multiple;@
+;@
+u:Sass::Tree::IfNodeW[00[o:Sass::Tree::CommentNode
+:
+@linei˛:
+@type:silent:@options{ :@value["?/* trim list so we can count from the lowest $base-size */:@children[ o:Sass::Tree::VariableNode;iˇ:@guarded0:
+@expro:Sass::Script::Funcall;iˇ:@keywords{ :
+@name"trim_list;	@:@splat0:
+@args[o:Sass::Script::Variable	;iˇ:@underscored_name"scale_values;"scale-values;	@o;;iˇ;{ ;"nth;	@;0;[o;	;iˇ;"base_size;"base-size;	@o:Sass::Script::Number;iˇ:@numerator_units[ :@original"1;	@;
+i:@denominator_units[ o:Sass::Script::Bool;iˇ;	@;
+F;"scale-values;	@;[ o; 
+;i;;;	@;
+["/* sort acsending */;[ o;;i;0;o;;i;{ ;"reverse_list;	@;0;[o;;i;{ ;"sort_list;	@;0;[o;	;i;"scale_values;"scale-values;	@;"scale-values;	@;[ o; 
+;i;;;	@;
+["6/* return the final value using the laced list */;[ o:Sass::Tree::ReturnNode	;i;o;;i;{ ;"nth;	@;0;[o;	;i;"scale_values;"scale-values;	@o:!Sass::Script::UnaryOperation	:@operator:
+minus;i;	@:@operando;	;i;"multiple;"multiple;	@;	@;[ [o:Sass::Tree::CommentNode
+;iÛ:
+@type:silent;@
+;["?/* trim list so we can count from the lowest $base-size */:@children[ o:Sass::Tree::VariableNode;iÙ:@guarded0:
+@expro:Sass::Script::Funcall;iÙ:@keywords{ ;"trim_list;@
+:@splat0:
+@args[o;	;iÙ;"scale_values;"scale-values;@
+o;;iÙ;{ ;"nth;@
+;0;[o;	;iÙ;"base_size;"base-size;@
+o;
+;iÙ;[ ;"1;@
+;i;@o:Sass::Script::Bool;iÙ;@
+;T;"scale-values;@
+;[ o;
+;iˆ;;;@
+;["/* sort acsending */;[ o;;i˜;0;o;;i˜;{ ;"sort_list;@
+;0;[o;	;i˜;"scale_values;"scale-values;@
+;"scale-values;@
+;[ o;
+;i˘;;;@
+;["6/* return the final value using the laced list */;[ o:Sass::Tree::ReturnNode	;i˙;o;;i˙;{ ;"nth;@
+;0;[o;	;i˙;"scale_values;"scale-values;@
+o;	;i˙;"multiple;"multiple;@
+;@
+;[ ;0;[[o;#;$"multiple;"multiple;	@0[o;#;$"scale_values;"scale-values;	@o;#	;i;$"scale_values;"scale-values;	@[o;#;$"base_size;"base-size;	@o;#	;i;$"base_size;"base-size;	@o;
+;i	;;;	@;["Q/*/////////////////////////////////////////////////////////////////////// */;
+[ o;
+;i;;;	@;["#/* alias for golden_ratio() */;
+[ o;;i;"golden;T;	@;
+[o;	;i;o;;i;{ ;"golden_ratio;	@;0;[ ;	@;
+[ ;0;[ o;
+;i;;;	@;["/* Shortcut */;
+[ o;;i;"ms;T;	@;
+[o;
+;i;;;	@;[";/* Return the value from the Modular Scale function */;
+[ o;	;i;o;;i;{ ;"modular-scale;	@;0;[	o;#	;i;$"multiple;"multiple;	@o;#	;i;$"base_size;"base-size;	@o;#	;i;$"
+ratio;"
+ratio;	@o;#	;i;$"round_pixels;"round-pixels;	@;	@;
+[ ;0;[	[o;#;$"multiple;"multiple;	@0[o;#;$"base_size;"base-size;	@o;#	;i;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i;$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i;$"round_pixels;"round-pixels;	@o;
+;i;;;	@;["#/* Write Modular Scale List */;
+[ o;;i;"modular-scale-list;T;	@;
+[o;;i;0;o;;i;{ ;"unquote;	@;0;[o:Sass::Script::String	;i;:string;	@;"MS-LIST:;"ms-list;	@;
+[ o:Sass::Tree::ForNode;i:@exclusiveF:
+@fromo;#	;i;$"
+start;"
+start;	@;T;	@:	@var"i;
+[o;;i;0;o;;i;{ ;"append;	@;0;[o;#	;i;$"ms_list;"ms-list;	@o;;i;{ ;"ms;	@;0;[	o;#	;i;$"i;"i;	@o;#	;i;$"base_size;"base-size;	@o;#	;i;$"
+ratio;"
+ratio;	@o;#	;i;$"round_pixels;"round-pixels;	@;"ms-list;	@;
+[ :@too;#	;i;$"finish;"finish;	@o;	;i;o;#	;i;$"ms_list;"ms-list;	@;	@;
+[ ;0;[
+[o;#;$"
+start;"
+start;	@o;;i;[ ;"0;	@;i ;@í[o;#;$"finish;"finish;	@o;;i;[ ;"20;	@;i;@í[o;#;$"base_size;"base-size;	@o;#	;i;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i;$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i;$"round_pixels;"round-pixels;	@o;;i;"ms-list;T;	@;
+[o;	;i ;o;;i ;{ ;"modular-scale-list;	@;0;[
+o;#	;i ;$"
+start;"
+start;	@o;#	;i ;$"finish;"finish;	@o;#	;i ;$"base_size;"base-size;	@o;#	;i ;$"
+ratio;"
+ratio;	@o;#	;i ;$"round_pixels;"round-pixels;	@;	@;
+[ ;0;[
+[o;#;$"
+start;"
+start;	@o;;i;[ ;"0;	@;i ;@í[o;#;$"finish;"finish;	@o;;i;[ ;"20;	@;i;@í[o;#;$"base_size;"base-size;	@o;#	;i;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i;$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i;$"round_pixels;"round-pixels;	@o:Sass::Tree::MixinDefNode;i#;"modular-scale-list;T;	@;
+[o:Sass::Tree::DebugNode	;i$;o;;i$;{ ;"modular-scale-list;	@;0;[
+o;#	;i$;$"
+start;"
+start;	@o;#	;i$;$"finish;"finish;	@o;#	;i$;$"base_size;"base-size;	@o;#	;i$;$"
+ratio;"
+ratio;	@o;#	;i$;$"round_pixels;"round-pixels;	@;	@;
+[ ;0;[
+[o;#;$"
+start;"
+start;	@o;;i#;[ ;"0;	@;i ;@í[o;#;$"finish;"finish;	@o;;i#;[ ;"20;	@;i;@í[o;#;$"base_size;"base-size;	@o;#	;i#;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i#;$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i#;$"round_pixels;"round-pixels;	@o;3;i';"ms-list;T;	@;
+[o;4	;i(;o;;i(;{ ;"modular-scale-list;	@;0;[
+o;#	;i(;$"
+start;"
+start;	@o;#	;i(;$"finish;"finish;	@o;#	;i(;$"base_size;"base-size;	@o;#	;i(;$"
+ratio;"
+ratio;	@o;#	;i(;$"round_pixels;"round-pixels;	@;	@;
+[ ;0;[
+[o;#;$"
+start;"
+start;	@o;;i';[ ;"0;	@;i ;@í[o;#;$"finish;"finish;	@o;;i';[ ;"20;	@;i;@í[o;#;$"base_size;"base-size;	@o;#	;i';$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i';$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i';$"round_pixels;"round-pixels;	@o;3;i+;"modular-scale-list-output;T;	@;
+[o:Sass::Tree::RuleNode;i,:
+@rule["MODULAR-SCALE-LIST:@parsed_ruleso:"Sass::Selector::CommaSequence;i,:@members[o:Sass::Selector::Sequence;9[o:#Sass::Selector::SimpleSequence
+;i,;9[o:Sass::Selector::Element	;i,;["MODULAR-SCALE-LIST:@filename" :@namespace0:@sourceso:Set:
+@hash{ :@subject0;=@@;=@@;T;	@:
+@tabsi ;
+[o:Sass::Tree::PropNode:@prop_syntax:new;i-;["ms-list;	@;o;;i-;{ ;"modular-scale-list;	@;0;[
+o;#	;i-;$"
+start;"
+start;	@o;#	;i-;$"finish;"finish;	@o;#	;i-;$"base_size;"base-size;	@o;#	;i-;$"
+ratio;"
+ratio;	@o;#	;i-;$"round_pixels;"round-pixels;	@;Ci ;
+[ ;0;[
+[o;#;$"
+start;"
+start;	@o;;i+;[ ;"0;	@;i ;@í[o;#;$"finish;"finish;	@o;;i+;[ ;"20;	@;i;@í[o;#;$"base_size;"base-size;	@o;#	;i+;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i+;$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i+;$"round_pixels;"round-pixels;	@o;3;i1;"ms-list-output;T;	@;
+[o:Sass::Tree::MixinNode;i2;{ ;"modular-scale-list-output;	@;
+[ ;0;[
+o;#	;i2;$"
+start;"
+start;	@o;#	;i2;$"finish;"finish;	@o;#	;i2;$"base_size;"base-size;	@o;#	;i2;$"
+ratio;"
+ratio;	@o;#	;i2;$"round_pixels;"round-pixels;	@;0;[
+[o;#;$"
+start;"
+start;	@o;;i1;[ ;"0;	@;i ;@í[o;#;$"finish;"finish;	@o;;i1;[ ;"20;	@;i;@í[o;#;$"base_size;"base-size;	@o;#	;i1;$"base_size;"base-size;	@[o;#;$"
+ratio;"
+ratio;	@o;#	;i1;$"
+ratio;"
+ratio;	@[o;#;$"round_pixels;"round-pixels;	@o;#	;i1;$"round_pixels;"round-pixels;	@o;
+;i5;;;	@;["H/* Other libraries can easily query if this function is avalible */;
+[ o;;i6;0;o;;i6;	@;T;"modular-scale-loaded;	@;
+[ 

@@ -16,7 +16,7 @@ class Lot(USLotBase):
      
     parcel = models.OneToOneField("Parcel")
 
-    projects = models.ManyToManyField(Project, blank=True, null=True)
+    projects = models.ManyToManyField(Project, through="ProjectLot", blank=True, null=True)
 
     is_available = models.BooleanField(default=False)
     has_vacancy_violation = models.BooleanField(default=False)
@@ -235,3 +235,11 @@ def parcel_post_save(sender, **kwargs):
             geom=parcel.geom)
 
 post_save.connect(parcel_post_save, sender=Parcel)
+
+
+class ProjectLot(models.Model):
+    """
+    An intermediary model which connects Lots and Projects
+    """
+    lot = models.ForeignKey(Lot)
+    project = models.ForeignKey(Project)

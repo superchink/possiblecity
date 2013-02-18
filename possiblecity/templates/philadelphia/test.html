@@ -1,0 +1,44 @@
+{% extends "philadelphia/base.html" %}
+{% block layout %}
+<div class="page-content" style="position:relative; top:100px">
+	<div id="map" style="height:600px; width: 100%">
+    </div>
+    <div id="map-status" class="status" style="display:none">
+        Loading Map Features...
+    </div>
+</div>
+{% endblock layout %}
+{% block js_local %}
+<script src="{{ STATIC_URL }}js/libs/lvector/lvector.js"></script>
+<script src="{{ STATIC_URL }}js/libs/lvector/Custom.js"></script>
+<script src="{{ STATIC_URL }}js/libs/leaflet-plugins/layer/tile/Bing.js"></script>
+<script>
+    // Initialize the map object
+    var map = L.map('map');
+    
+    // Prep the background tile layer
+    var tileUrl = 'http://api.tiles.mapbox.com/v3/dmeehan.map-sued82zn/{z}/{x}/{y}.png';
+    var tileAttribution = '';
+    
+    L.tileLayer(tileUrl, {
+       attribution: tileAttribution,
+    }).addTo(map);
+
+    ags_light_rail = new lvector.AGS({
+        url: "http://maps.rtd-denver.com/ArcGIS/rest/services/SystemMapLiteGoogleVectors/MapServer/1",
+        fields: "*",
+        scaleRange: [13, 20],
+        showAll: true,
+        symbology: {
+            type: "single",
+            vectorOptions: {
+                weight: 4,
+                opacity: 0.8,
+                color: "#004a00"
+            }    
+         },
+         popupTemplate: '<div class="iw-content"><h3>Light Rail Line</h3><table class="condensed-table"><tr><th>Route</    th><td>{ROUTE}</td></tr></table></div>'
+     });
+
+</script>
+{% endblock js_local %}

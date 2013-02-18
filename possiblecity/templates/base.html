@@ -16,6 +16,8 @@
     </title>
 
     {% block mobile-viewport %}
+    <!-- Set the viewport width to device width for mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {% endblock mobile-viewport %}
 
     {% block favicons %}
@@ -25,18 +27,13 @@
     {% block css %}
         {% load compress %}
         {% compress css %}
-        <link type="text/css" rel="stylesheet" 
-             href="{{ STATIC_URL }}css/possiblecity.css" charset="utf-8">
+        <link href="{{ STATIC_URL}}stylesheets/app.css" media="screen, projector, print" rel="stylesheet" type="text/css" />
         {% endcompress %}
     {% endblock css %}
 
     {% block js_head %}
         <!-- All JavaScript at the bottom, except for: -->
-        <script type="text/javascript" 
-            src="http://use.typekit.com/rna3gum.js"></script>
-        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
-        <script src="{{ STATIC_URL }}js/libs/modernizr.dev.js"></script>
-        <script src="{{ STATIC_URL }}js/libs/respond.min.js"></script>
+        <script src="{{ STATIC_URL }}javascripts/foundation/modernizr.foundation.js"></script>
     {% endblock js_head %}
 
     {% block extra_head %}
@@ -51,14 +48,16 @@
         {% block site_header_container %}
         <header class="site-header">
             {% block site_header %}
-            <nav class="site-nav">
+            <nav class="site-nav top-bar">
     				{% block identity %}
-        			<div class="identity">
+                <ul>
+	                <li class="name">
             			<h1><a href="{% url 'home' %}">Possiblecity</a></h1>
-            			<a class="logo" href="{% url 'home' %}">
+            			<!--<a class="logo" href="{% url 'home' %}">
                 			<img src="{{ STATIC_URL }}images/logo.png" />
-            			</a>
-        			</div>
+            			</a>-->
+                    <li class="topbar-toggle"><a href="#"></a></li>
+        			</ul>
     				{% endblock identity %}
     				{% block section-nav %}
         			<ul class="section-nav">
